@@ -2927,23 +2927,6 @@ https://velyn.vercel.app/api/ai/logo?prompt=${encodeURIComponent(text)}&apikey=v
 }
 break
 
-case 'memek': {
-  if (!text) {
-    return newReply('Masukkan teks yang ingin dijadikan gambar!');
-  }
-  try {
-    newReply('_Sedang Memproses Gambar..._');
-    let apiUrl = `
-https://api.sycze.my.id/pikachu?text=shycze%20no%20problem${encodeURIComponent(text)}&apikey=sycze`;
-    let response = await fetch(apiUrl);
-    let buffer = await response.buffer();
-    await sock.sendMessage(m.chat, { image: buffer, caption: '*Ini hasil gambarnya kak :v*\n\n> Maaf jika tidak sesuai harapan 😔' }, { quoted: m });
-  } catch (error) {
-    console.error('Error in Logo:', error);
-    newReply('Terjadi kesalahan saat memproses gambar');
-  }
-}
-break
 			
 			case 'cekhodam': {
 				if (!text) return newReply(`ayo cek hodam kalian\n\nContoh: ${prefix + command} andri.!`)
