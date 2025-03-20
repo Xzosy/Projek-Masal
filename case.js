@@ -38,6 +38,7 @@ const similarity = require('similarity');
 const toMS = require('ms');
 const translate = require('translate-google-api');
 const util = require('util');
+const { getVideoInfo, downloadVideo, downloadAudio } =require("hybrid-ytdl");
 const yts = require('yt-search');
 const readmore = String.fromCharCode(8206).repeat(4001);
 
@@ -310,6 +311,16 @@ async function checkBandwidth() {
 	};
 };
 
+const getFileSizeFromUrl = async (url) => {
+    try {
+        let response = await fetch(url, { method: 'HEAD' });
+        return response.headers.get('content-length') || 0;
+    } catch (err) {
+        console.error('Error fetching file size:', err);
+        return 0;
+    }
+};
+
 module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 	try {
 		const {
@@ -333,7 +344,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 		const quoted = (getQuoted.type == 'buttonsMessage') ? getQuoted[Object.keys(getQuoted)[1]] : (getQuoted.type == 'templateMessage') ? getQuoted.hydratedTemplate[Object.keys(getQuoted.hydratedTemplate)[1]] : (getQuoted.type == 'product') ? getQuoted[Object.keys(getQuoted)[0]] : m.quoted ? m.quoted : m
 		const mime = (quoted.msg || quoted).mimetype || '';
 		const qmsg = (quoted.msg || quoted);
-
+		
 		const isMedia = /image|video|sticker|audio/.test(mime);
 		const isImage = (type == 'imageMessage');
 		const isVideo = (type == 'videoMessage');
@@ -1661,7 +1672,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				const youtubeRegex = /^https?:\/\/(?:(?:youtu\.be\/)|(?:(?:www\.)?youtube\.com\/(?:(?:watch\?(?:[^&]+&)?vi?=)|(?:vi?\/)|(?:shorts\/))))([a-zA-Z0-9_-]{11,})/i;
 
 				if (instagramRegex.test(budy)) {
-					await m.react('⏱️');
+					await m.react('🐤');
 					const result = await igdl(budy);
 					if (result.length > 0) {
 						let caption = "📥 *Instagram Downloader*\n\n";
@@ -1678,7 +1689,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 					}
 					await m.react('✅');
 				} else if (tiktokRegex.test(budy)) {
-					await m.react('⏱️');
+					await m.react('🐤');
 					const result = await ttdl(budy);
 					if (result && result.video.length > 0) {
 						let caption = "📥 *TikTok Downloader*\n\n";
@@ -1696,7 +1707,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 					}
 					await m.react('✅');
 				} else if (youtubeRegex.test(budy)) {
-					await m.react('⏱️');
+					await m.react('🐤');
 					const result = await youtube(budy);
 					if (result && result.mp4) {
 						let caption = "📥 *YouTube Downloader*\n\n";
@@ -1726,7 +1737,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 		if (db.data.settings[botNumber].autosticker && !m.isGroup && !m.key.fromMe) {
 			if (/image/.test(mime) && !/webp/.test(mime)) {
 				let mediac = await sock.downloadAndSaveMediaMessage(quoted);
-				await m.react('⏱️');
+				await m.react('🐤');
 				await sock.sendImageAsSticker(m.chat, mediac, m, { 
 					packname: global.packname, 
 					author: global.author 
@@ -1734,7 +1745,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			} else if (/video/.test(mime)) {
 				if ((quoted.msg || quoted).seconds > 11) return;
 				let mediac = await sock.downloadAndSaveMediaMessage(quoted);
-				await m.react('⏱️');
+				await m.react('🐤');
 				await sock.sendVideoAsSticker(m.chat, mediac, m, { 
 					packname: global.packname, 
 					author: global.author 
@@ -2894,6 +2905,52 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 					console.log('Error waktu daftar:', error);
 					newReply('Aduh kak, ada yang error nih. Mora coba benerin dulu ya! 🙏');
 				}
+			}
+			break;
+			
+			
+case 'logo': {
+  if (!text) {
+    return newReply('Masukkan teks yang ingin dijadikan gambar!');
+  }
+  try {
+    newReply('_Sedang Memproses Gambar..._');
+    let apiUrl = `
+https://velyn.vercel.app/api/ai/logo?prompt=${encodeURIComponent(text)}&apikey=velyn`;
+    let response = await fetch(apiUrl);
+    let buffer = await response.buffer();
+    await sock.sendMessage(m.chat, { image: buffer, caption: '*Ini hasil gambarnya kak :v*\n\n> Maaf jika tidak sesuai harapan 😔' }, { quoted: m });
+  } catch (error) {
+    console.error('Error in Logo:', error);
+    newReply('Terjadi kesalahan saat memproses gambar');
+  }
+}
+break
+
+case 'memek': {
+  if (!text) {
+    return newReply('Masukkan teks yang ingin dijadikan gambar!');
+  }
+  try {
+    newReply('_Sedang Memproses Gambar..._');
+    let apiUrl = `
+https://api.sycze.my.id/pikachu?text=shycze%20no%20problem${encodeURIComponent(text)}&apikey=sycze`;
+    let response = await fetch(apiUrl);
+    let buffer = await response.buffer();
+    await sock.sendMessage(m.chat, { image: buffer, caption: '*Ini hasil gambarnya kak :v*\n\n> Maaf jika tidak sesuai harapan 😔' }, { quoted: m });
+  } catch (error) {
+    console.error('Error in Logo:', error);
+    newReply('Terjadi kesalahan saat memproses gambar');
+  }
+}
+break
+			
+			case 'cekhodam': {
+				if (!text) return newReply(`ayo cek hodam kalian\n\nContoh: ${prefix + command} andri.!`)
+				let jawaban = [`𝘂𝗰𝗶𝗻𝗴 𝗽𝗲𝘁𝗲𝘁🤪`, `𝘁𝘂𝘁𝘂𝗹 𝗯𝘂𝘀𝗶𝗮𝘁🐺`, `𝗯𝗲𝗿𝗶𝘁 𝗵𝗶𝘁𝘂𝘁🐰`, `𝗹𝗮𝗹𝗮𝘆 𝗯𝗮𝗱𝗼𝘁🦇`, `𝘂𝗰𝗶𝗻𝗴 𝗲𝗻𝗼𝗴𝗮𝗻🐅`, `𝗲𝗺𝗯𝗲 𝗯𝘂𝘀𝗶𝗮𝘁🐑`, `𝘂𝗻𝗰𝗮𝗹 𝗯𝗲𝗿𝗮𝗻𝗮𝗸🦌`, `𝘁𝗲𝗿𝗶 𝗿𝗮𝗿𝗼𝗻𝗴🐠`, `𝗵𝗮𝘆𝗮𝗺 𝗻𝗮𝗴𝗼𝗴🐤`, `𝗱𝗼𝗺𝗮 𝘀𝗶𝗽𝗶𝘁🐐`, `𝗸𝗲𝗼𝗻𝗴 𝗴𝗲𝗺𝗶𝗹`, `𝗸𝘂𝗻𝘁𝗶 𝗯𝗼𝗴𝗲𝗹`, `𝗽𝗼𝗰𝗼𝗻𝗴 𝗰𝗲𝗻𝗴𝗲𝗵🗿`, `𝗴𝗲𝗻𝗱𝗲𝗿𝗲𝘄𝗼 𝗯𝘂𝘀𝗶𝗮𝘁🗿`, `𝗯𝘂𝗷𝘂𝗿 𝗯𝗮𝘀𝗲𝗵🌚`, `𝗼𝗿𝗮𝘆 𝗯𝗶𝗻𝗴𝗸𝘂𝗻𝗴🪱`]
+				let hasil = jawaban[Math.floor(Math.random() * jawaban.length)]
+				let respon = `*cekhodam ${text}*\n𝙷𝙾𝙳𝙰𝙼 𝙽𝚈𝙰 𝙰𝙳𝙰𝙻𝙰𝙷: ${hasil}`
+				await newReply(respon)
 			}
 			break;
 
@@ -5126,7 +5183,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 
 			case 'repo': case 'repository': {
 				if (!text || !text.includes('/')) {
-					return newReply(`Kamu bisa pakai format ini ya: *${prefix + command} username/repository*\n\n*Kirim perintah*: *${prefix + command} WhiskeySockets/Baileys*`);
+					return newReply(`Kamu bisa pakai format ini ya: *${prefix + command} username/repository*\n\n*Kirim perintah*: *${prefix + command} Whiskeysockets/Baileys*`);
 				}
 				const [username, repoName] = text.split('/');
 				try {
@@ -5547,7 +5604,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				}
 				let push = await sock.groupMetadata(m.chat)
 				if (push.participants.length > 901) return newReply('Batas member maksimal: *900*')
-				await m.react('⏱️');
+				await m.react('🐤');
 				for (let a of push.participants) {
 					const repf = await sock.sendMessage(a.id, { contacts: kontak })
 					sock.sendMessage(a.id, { text: chet }, { quoted: repf })
@@ -5562,7 +5619,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			case 'pushcontactgc': {
 				if (!isCreator) return newReply(mess.owner);
 				if (!m.isGroup) return newReply(mess.group);
-				if (!text) return newReply(`⚙️ *Penggunaan yang benar:*\n${prefix + command} teks|jeda\n\n📸 *Reply gambar* untuk mengirim ke semua grup.\n⏱️ *Jeda*: 1000 = 1 detik\n\n*Contoh*: ${prefix + command} Halo semuanya!|9000`);
+				if (!text) return newReply(`⚙️ *Penggunaan yang benar:*\n${prefix + command} teks|jeda\n\n📸 *Reply gambar* untuk mengirim ke semua grup.\n🐤 *Jeda*: 1000 = 1 detik\n\n*Contoh*: ${prefix + command} Halo semuanya!|9000`);
 				await newReply(`⏳ *Sedang diproses...*`);
 				let getGroups = await sock.groupFetchAllParticipating();
 				let groups = Object.entries(getGroups).map((entry) => entry[1]);
@@ -5627,7 +5684,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			case 'pushcontact3': {
 				if (!isCreator) return newReply(mess.owner);
 				if (!m.isGroup) return newReply(mess.group);
-				if (!text) return newReply(`⚙️ *Penggunaan yang benar:*\n\n${prefix + command} jeda|teks\n\n📸 *Reply gambar* untuk mengirim ke semua anggota.\n⏱️ *Jeda*: 1000 = 1 detik`);
+				if (!text) return newReply(`⚙️ *Penggunaan yang benar:*\n\n${prefix + command} jeda|teks\n\n📸 *Reply gambar* untuk mengirim ke semua anggota.\n🐤 *Jeda*: 1000 = 1 detik`);
 				try {
 					let jeda = text.split("|")[0];
 					let caption = text.split("|")[1];
@@ -5650,7 +5707,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 					}
 					newReply(`✅ *Pesan berhasil dikirim ke semua anggota!* 📨`);
 				} catch {
-					newReply(`⚙️ *Penggunaan yang benar:*\n\n${prefix + command} jeda|teks\n\n📸 *Reply gambar* untuk mengirim ke semua anggota.\n⏱️ *Jeda*: 1000 = 1 detik`);
+					newReply(`⚙️ *Penggunaan yang benar:*\n\n${prefix + command} jeda|teks\n\n📸 *Reply gambar* untuk mengirim ke semua anggota.\n🐤 *Jeda*: 1000 = 1 detik`);
 				}
 			}
 			break;
@@ -6576,7 +6633,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (!isBotAdmins) return newReply(mess.botAdmin);
 				if (args[0] === 'close') {
 					await sock.groupSettingUpdate(m.chat, 'announcement')
-						.then(() => newReply('✅ Grup berhasil ditutup, hanya admin yang bisa mengirim pesan sekarang! 🔒'))
+						.then(() => newReply('✅ Grup berhasil ditutup, hanya admin yang bisa mengirim pesan sekarang! ∅'))
 						.catch((err) => newReply(`⚠️ Gagal menutup grup: ${err}`));
 				} else if (args[0] === 'open') {
 					await sock.groupSettingUpdate(m.chat, 'not_announcement')
@@ -6688,7 +6745,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 						.catch((err) => newReply(`⚠️ Gagal membuka izin edit info grup: ${err}`));
 				} else if (args[0] === 'close') {
 					await sock.groupSettingUpdate(m.chat, 'locked')
-						.then(() => newReply('✅ Hanya admin yang bisa mengedit info grup sekarang! 🔒🛡️'))
+						.then(() => newReply('✅ Hanya admin yang bisa mengedit info grup sekarang! ∅🛡️'))
 						.catch((err) => newReply(`⚠️ Gagal menutup izin edit info grup: ${err}`));
 				} else {
 					newReply(`⚙️ Penggunaan perintah:\n · *${prefix + command} open* → Izinkan anggota mengedit info grup\n · *${prefix + command} close* → Hanya admin yang bisa mengedit info grup`);
@@ -6818,6 +6875,18 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				}
 			};
 			break;
+			
+			case 'npm': {
+				if (!text) return newReply(`⚠️ Gunakan dengan cara: ${prefix + command} *nama package npm*\n\n🤔 *Contohnya:*\n\n${prefix + command} axios`);
+				try {
+					const npmInfo = await npmstalk(text);
+					newReply(`📦 *Package:* ${npmInfo.name}\n🔢 *Versi Terbaru:* ${npmInfo.versionLatest}\n📅 *Waktu Terbit:* ${npmInfo.publishTime}\n🔧 *Dependencies Terbaru:* ${npmInfo.latestDependencies}`);
+				} catch (err) {
+					console.error(err);
+					newReply(`❌ Ada masalah waktu ambil data dari NPM, Kak! Coba lagi nanti ya 🥺`);
+				}
+			}
+			break;
 
 			case 'tes':
 			case 'test': {
@@ -6884,12 +6953,14 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			break;
 
 			case 'bratgambar': {
-				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
+				if (!isPremium && db.data.users[m.sender].limit < 1)return newReply(mess.limit);
+				if (!isPremium) return newReply(mess.premium);
+				if (m.sender in enhance) return newReply(mess.limit);
 				if (m.sender in enhance) return newReply(`Masih ada proses yang belum diselesaikan, mohon tunggu sampai proses selesai.`);	
 				if (!text) return newReply(`Contoh : ${prefix + command} Hai kak`);
 				if (text.length > 101) return newReply(`Karakter terbatas, max 100!`);
 				enhance[m.sender] = true;
-				await m.react('⏱️');
+				await m.react('🐤');
 				try {
 					const buffer = await getBuffer(`https://brat.caliphdev.com/api/brat?text=${encodeURIComponent(text)}`);
 					await m.react('✅');
@@ -6913,7 +6984,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				const tempDir = path.join(process.cwd(), 'temp');
 				if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
 				const framePaths = [];
-				await m.react('⏱️');
+				await m.react('🐤');
 				try {
 					for (let i = 0; i < words.length; i++) {
 						const currentText = words.slice(0, i + 1).join(" ");
@@ -7137,12 +7208,12 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (!quoted) return newReply(`Kirim atau balas gambar/video/gif dengan caption ${prefix + command}\nDurasi video 1-9 detik ya!`);
 				if (!mime) return newReply(`Kirim atau balas gambar/video/gif dengan caption ${prefix + command}\nDurasi video 1-9 detik ya!`);
 				if (/image/.test(mime)) {
-					await m.react('⏱️');
+					await m.react('🐤');
 					let media = await sock.downloadAndSaveMediaMessage(quoted);
 					await sock.sendImageAsSticker(m.chat, media, m, { packname: global.packname, author: global.author });
 				} else if (/video/.test(mime)) {
 					if ((quoted.msg || quoted).seconds > 9) return newReply(`Durasi video terlalu panjang! 🕒 Kirim video dengan durasi 1-9 detik ya!`);
-					await m.react('⏱️');
+					await m.react('🐤');
 					let media = await sock.downloadAndSaveMediaMessage(quoted);
 					await sock.sendVideoAsSticker(m.chat, media, m, { packname: global.packname, author: global.author });
 				} else {
@@ -7361,7 +7432,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!isPremium) return newReply(mess.premium);
 				if (!mime) return newReply(`Kirim/Reply Video/Gambar Dengan Caption ${prefix + command}`);
-				await m.react('⏱️');
+				await m.react('🐤');
 				try {
 					let media = await sock.downloadAndSaveMediaMessage(quoted);
 					if (/image|video/.test(mime)) {
@@ -7390,7 +7461,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!isPremium) return newReply("Fitur ini khusus buat pengguna premium aja, kak! Yuk upgrade sekarang juga biar bisa pakai fitur ini 😊.");
 				if (!mime) return newReply(`Kirim/Reply Video/Gambar Dengan Caption ${prefix + command}`);
-				await m.react('⏱️');
+				await m.react('🐤');
 				try {
 					let media = await sock.downloadAndSaveMediaMessage(quoted);
 					if (/image|video/.test(mime)) {
@@ -7422,7 +7493,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!quoted) return newReply('Reply Image')
 				if (!/webp/.test(mime)) return newReply(`Reply sticker dengan caption *${prefix + command}*`)
-				await m.react('⏱️');
+				await m.react('🐤');
 				let media = await sock.downloadAndSaveMediaMessage(quoted)
 				let ran = await getRandom('.png')
 				exec(`ffmpeg -i ${media} ${ran}`, (err) => {
@@ -7453,7 +7524,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				enhance[m.sender] = true;
 				try {
 					const availableScales = [2, 4, 6];
-					await m.react('⏱️');
+					await m.react('🐤');
 					let media = await q.download();
 					let scale = availableScales.includes(parseInt(text)) ? parseInt(text) : 2;
 					let tag = `@${m.sender.split("@")[0]}`;		
@@ -7668,7 +7739,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (!/video/.test(mime) && !/audio/.test(mime)) return newReply(`Reply Video/VN yang ingin dijadikan MP3 dengan caption ${prefix + command}`);
 				if (!quoted) return newReply(`Reply Video/VN yang ingin dijadikan MP3 dengan caption ${prefix + command}`);
 				try {
-					await m.react('⏱️');
+					await m.react('🐤');
 					let media = await quoted.download();
 					let audioBuffer = await toAudio(media, 'mp4');
 					await sock.sendMessage(m.chat, { 
@@ -7712,7 +7783,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 					if (/smooth/.test(command)) set = '-filter:v "minterpolate=\'mi_mode=mci:mc_mode=aobmc:vsbmc=1:fps=120\'"';
 					if (/squirrel/.test(command)) set = '-filter:a "atempo=0.5,asetrate=65100"';
 					if (/audio/.test(mime)) {
-						await m.react('⏱️');
+						await m.react('🐤');
 						let media = await sock.downloadAndSaveMediaMessage(quoted);
 						let ran = getRandom('.mp3');
 						exec(`ffmpeg -i ${media} ${set} ${ran}`, (err, stderr, stdout) => {
@@ -8084,137 +8155,225 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			db.data.users[m.sender].limit -= 1;
 			break;
 
-			case 'yt':
-			case 'play':
-			case 'ytplay': {
-				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
-				if (!text) return newReply(`*Kirim perintah*: ${prefix + command} Lagu favorit`);
-				try {
-					await m.react('⏱️');
-					const search = await yts(`${text}`);
-					if (!search || search.all.length === 0) return newReply(`*Lagu tidak ditemukan!* ☹️`);
-					const { 
-						videoId, 
-						image, 
-						title, 
-						views, 
-						duration, 
-						author, 
-						ago, 
-						url, 
-						description 
-					} = search.all[0];
-					const button = [{
-						"name": "single_select",
-						"buttonParamsJson": `{
-							"title": "Click Here ⎙",
-							"sections": [
-								{
-									"title": "Unduh Audio 🎧",
-									"rows": [
-										{
-											"header": "Audio Otomatis 🎵",
-											"title": "Download Audio - Automatic Quality",
-											"id": ".ytmp3 ${url}"
-										}
-									]
-								},
-								{
-									"title": "Unduh Video 🎥",
-									"rows": [
-										{
-											"header": "Video Otomatis 🎥",
-											"title": "Download Video - Automatic Quality",
-											"id": ".ytmp4 ${url}"
-										}
-									]
-								}
-							]
-						}`
-					}];
-					let caption = `*${title}*\n\n`;
-					caption += `*🎶 Jenis*: Play\n`;
-					caption += `*📌 ID*: ${videoId}\n`;
-					caption += `*⏱️ Durasi*: ${duration}\n`;
-					caption += `*🕒 Diunggah*: ${ago}\n`;
-					caption += `*🔗 Link*: ${url}\n\n`;
-					caption += `_*Pilih jenis download yang Kamu butuhin... pilih yang paling pas buat Kamu ya!*_`;
-					sock.sendButtonImage(m.chat, { url: image }, button, caption, footer, m)
-				} catch (error) {
-					console.log(error);
-					newReply('Gagal saat melakukan tindakan, jika anda pemilik silahkan cek console.');
-				};
-				db.data.users[m.sender].limit -= 1;
-				break;
-			}
+			
+case 'play': 
+case 'ytplay': {
+if (!text) return m.reply(`Example: ${prefix + command} Lagu sad`);
+try {		
+let search = await yts(`${text}`);
+if (!search || search.all.length === 0) return m.reply(`*Lagu tidak ditemukan!* ☹️`);
+let { videoId, image, title, views, duration, author, ago, url, description } = search.all[0];
+let caption = `「 *YOUTUBE PLAY* 」\n\n🆔 ID : ${videoId}\n💬 Title : ${title}\n📺 Views : ${views}\n⏰ Duration : ${duration.timestamp}\n▶️ Channel : ${author.name}\n📆 Upload : ${ago}\n🔗 URL Video : ${url}\n📝 Description : ${description}`;
+sock.sendMessage(m.chat,{
+image: { url: image },
+caption: caption,
+footer: `${global.namaOwner}`,
+buttons: [
+{
+buttonId: `${prefix}ytmp3 ${url}`,
+buttonText: {
+displayText: "YouTube Music"
+}
+},
+{
+buttonId: `${prefix}ytmp4 ${url}`,
+buttonText: {
+displayText: "YouTube Video"
+}
+}
+],
+viewOnce: true,
+}, {
+quoted: m
+});
+} catch (err) {
+console.error(err);
+m.reply(`*Terjadi kesalahan!* 😭\n${err.message || err}`);
+}
+}
+break
+ 
+case 'xytmp3':   
+case 'ytaudio':   
+case 'ytmp3':   
+case 'yta': {  
+    if (!text) return m.reply(`Gunakan: ${prefix + command} <url> [bitrate]`);  
+    let url = args[0];   
+    let bitrate = args[1] && !isNaN(args[1]) ? args[1] : "128";   
+    try {  
+        await sock.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
+        let info = await getVideoInfo(url);
+        if (!info || !info.status) return m.reply('❌ Gagal mendapatkan informasi video.');
+        await sock.sendMessage(m.chat, { react: { text: '📥', key: m.key } });
+        let audio = await downloadAudio(url, bitrate);
+        if (!audio.status || !audio.downloadUrl) return m.reply('❌ Gagal mendapatkan file audio.');
+        console.log('Audio Info:', audio); // Debugging
+        let captionInfo = `🎵 *${info.title}*\n👤 *Creator:* ${info.creator}\n⏳ *Durasi:* ${info.duration} detik\n📡 *Sumber:* ${audio.source}\n🎶 *Bitrate:* ${bitrate}kbps\n🔗 *URL:* ${info.url}`;
+        await sock.sendMessage(m.chat, {
+            image: { url: info.thumbnail },
+            caption: captionInfo
+        }, { quoted: m });
+        await sock.sendMessage(m.chat, { react: { text: '📤', key: m.key } });
+        let fileSize = await getFileSizeFromUrl(audio.downloadUrl);
+        console.log('File Size (bytes):', fileSize); // Debugging
+        let captionMedia = `🎵 *${info.title}*\n👤 *${info.creator}*\n📡 *Sumber:* ${audio.source}`;
+        await sock.sendMessage(m.chat, { 
+            [fileSize > 15 * 1024 * 1024 ? "document" : "audio"]: { url: audio.downloadUrl },
+            mimetype: 'audio/mp4',
+            fileName: `${info.title}.mp3`,
+            caption: captionMedia
+        }, { quoted: m });
+        await sock.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
+    } catch (err) {  
+        console.error(err);  
+        m.reply('❌ Terjadi kesalahan.');  
+    }  
+}   
+break
+ 
+case "yt4":
+case "ytvideo": {
+if (!q) return newReply(`Example: ${prefix + command} https://youtube.com/watch?v=CVLeZpg6Kzk 144/240/360/480/720/1080`);
+ const args = q.split(' ');
+ const url = args[0];
+ const availableResolutions = ['144', '240', '360', '480', '720', '1080'];
+ let quality = args[1] && availableResolutions.includes(args[1]) ? args[1] : '480';
+ if (!url.match(/^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)) {
+ return newReply(`Please provide a valid YouTube URL\n\nAvailable resolutions: ${availableResolutions.join(', ')}`);
+ }
+ newReply(mess.wait);
+ try {
+ const apiUrl = `https://api.hiuraa.my.id/downloader/savetube?url=${encodeURIComponent(url)}&format=${quality}`;
+ const response = await fetch(apiUrl);
+ const data = await response.json();
+ if (!data.status || !data.result) {
+ return newReply('Failed to download the video');
+ }
+ const { title, duration, thumbnail, download } = data.result;
+ await sock.sendMessage(m.chat, {
+ image: { url: thumbnail },
+ caption: `*${title}*\n*${quality}p* | *${duration}*`
+ }, { quoted: m });
+ 
+ await sock.sendMessage(m.chat, {
+ video: { url: download },
+ mimetype: 'video/mp4'
+ }, { quoted: m });
+ 
+ } catch (error) {
+ console.error('Error downloading YouTube video:', error);
+ newReply('An error occurred while downloading the video');
+ }
+ }
+ break
 
-			case 'ytaudio': 
-			case 'ytmp3': {
-				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
-				if (!text) return newReply(`*Kirim perintah*: ${prefix + command} <url>`);
-				const youtubeRegex = /^https?:\/\/(?:(?:youtu\.be\/)|(?:(?:www\.)?youtube\.com\/(?:(?:watch\?(?:[^&]+&)?vi?=)|(?:vi?\/)|(?:shorts\/))))([a-zA-Z0-9_-]{11,})/i;
-				if (!youtubeRegex.test(text)) return newReply(`Link yang Kamu masukkan bukan link YouTube valid! 😅`);
-				try {
-					const result = await youtube(text);
-					if (result && result.mp3) {
-						let captionText = `*${result.title}*\n\n`;
-						captionText += `- *Creator*: ${result.name || "Tidak diketahui"}\n`;
-						captionText += `- *Views*: ${formatAngka(result.views || "0")}\n`;
-						captionText += `- *Upload*: ${result.ago || "Tidak diketahui"}\n`;
-						captionText += `- *Status*: Done! ✅\n\n`;
-						captionText += `_Tunggu sebentar, media sedang dikirim..._`;
-						await newReply(captionText);
-						await sock.sendMessage(m.chat, { 
-							audio: { url: result.mp3 }, 
-							mimetype: 'audio/mp4' 
-						}, { 
-							quoted: m 
-						});
-					} else {
-						newReply("Gagal mengambil data dari YouTube.");
-					}
-				} catch (err) {
-					console.error(err);
-					await m.react('😭');
-					newReply('*Data tidak ditemukan!* ☹️');
-				}
-				db.data.users[m.sender].limit -= 1;
-				break;
-			}
+case 'yt3': case 'ytaudio':
+ if (!text) return newReply('Masukkan judul lagu yang ingin dicari!');
+ try {
+ const axios = require('axios');
+ const fs = require('fs');
+ const path = require('path');
+ await sock.sendMessage(m.chat, { react: { text: "⏱️", key: m.key } });
+ let apiUrl = `https://api.alvianuxio.eu.org/api/play?query=${encodeURIComponent(text)}&apikey=kayzuMD&format=mp3`;
+ let { data } = await axios.get(apiUrl, { timeout: 15000 });
+ if (!data || !data.data || !data.data.response) {
+ return newReply('Gagal menemukan lagu.');
+ }
+ let song = data.data.response;
+ let caption = `🎵 *Judul:* ${song.title}\n`
+ + `⏳ *Durasi:* ${song.duration}\n`
+ + `📅 *Upload:* ${song.uploadDate}\n`
+ + `👀 *Views:* ${song.views?.toLocaleString() || 'N/A'}\n`
+ + `🎤 *Channel:* ${song.channel?.name || 'Unknown'}\n`
+ + `🔗 *Video:* ${song.videoUrl}\n`
+ + `🎧 *Download:* ${song.download}`;
+ const videoId = song.videoUrl.includes('v=') ? song.videoUrl.split('v=')[1].split('&')[0] : null;
+ const thumbnailUrl = videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null;
+ await sock.sendMessage(m.chat, {
+ text: caption,
+ contextInfo: {
+ externalAdReply: {
+ showAdAttribution: true,
+ title: song.title,
+ body: `Music Player`,
+ mediaType: 1,
+ thumbnailUrl: thumbnailUrl,
+ sourceUrl: song.videoUrl
+ }
+ }
+ }, { quoted: m });
+ const sanitizedTitle = song.title.replace(/[^\w\s-]/gi, '_').substring(0, 50);
+ let audioPath = path.join(__dirname, `temp_${Date.now()}_${sanitizedTitle}.mp3`);
+ try {
+ const response = await axios({
+ method: 'get',
+ url: song.download,
+ responseType: 'arraybuffer',
+ timeout: 60000,
+ headers: {
+ 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+ }
+ });
+ if (!response.data || response.data.length === 0) {
+ throw new Error('Empty response data');
+ }
+ fs.writeFileSync(audioPath, Buffer.from(response.data));
+ try {
+ await sock.sendMessage(m.chat, {
+ audio: fs.readFileSync(audioPath),
+ mimetype: 'audio/mpeg',
+ fileName: `${sanitizedTitle}.mp3`,
+ }, { quoted: m });
+ } catch (audioSendError) {
+ await sock.sendMessage(m.chat, {
+ document: fs.readFileSync(audioPath),
+ mimetype: 'audio/mpeg',
+ fileName: `${sanitizedTitle}.mp3`,
+ }, { quoted: m });
+ }
+ if (fs.existsSync(audioPath)) {
+ fs.unlinkSync(audioPath);
+ }
+ await sock.sendMessage(m.chat, { react: { text: "✅", key: m.key } });
+ } catch (downloadError) {
+ try {
+ const alternativeUrl = `https://api.akuari.my.id/downloader/youtube?link=${song.videoUrl}`;
+ const altResponse = await axios.get(alternativeUrl);
+ if (altResponse.data && altResponse.data.mp3) {
+ const audioResponse = await axios({
+ method: 'get',
+ url: altResponse.data.mp3,
+ responseType: 'arraybuffer',
+ timeout: 60000
+ });
+ audioPath = path.join(__dirname, `temp_alt_${Date.now()}_${sanitizedTitle}.mp3`);
+ fs.writeFileSync(audioPath, Buffer.from(audioResponse.data));
+ await sock.sendMessage(m.chat, {
+ document: fs.readFileSync(audioPath),
+ mimetype: 'audio/mpeg',
+ fileName: `${sanitizedTitle}.mp3`,
+ }, { quoted: m });
 
-			case 'ytmp4': 
-			case 'ytvideo': 
-			case 'ytv': {
-				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
-				if (!text) return newReply(`*Kirim perintah*: ${prefix + command} <url>`);
-				const youtubeRegex = /^https?:\/\/(?:(?:youtu\.be\/)|(?:(?:www\.)?youtube\.com\/(?:(?:watch\?(?:[^&]+&)?vi?=)|(?:vi?\/)|(?:shorts\/))))([a-zA-Z0-9_-]{11,})/i;
-				if (!youtubeRegex.test(text)) return newReply(`Link yang Kamu masukkan bukan link YouTube valid! 😅`);
-				try {
-					const result = await youtube(text);
-					if (result && result.mp4) {
-						let captionText = `*${result.title}*\n\n`;
-						captionText += `- *Creator*: ${result.name || "Tidak diketahui"}\n`;
-						captionText += `- *Views*: ${formatAngka(result.views || "0")}\n`;
-						captionText += `- *Upload*: ${result.ago || "Tidak diketahui"}\n`;
-						captionText += `- *Status*: Done! ✅`;
-						sock.sendMessage(m.chat, { 
-							video: { url: result.mp4 }, 
-							caption: captionText 
-						}, { 
-							quoted: m 
-						});
-					} else {
-						newReply("Gagal mengambil data dari YouTube.");
-					}
-				} catch (err) {
-					console.error(err);
-					await m.react('😭');
-					newReply('*Data tidak ditemukan!* ☹️');
-				}
-				db.data.users[m.sender].limit -= 1;
-				break;
-			}
-
+ if (fs.existsSync(audioPath)) {
+ fs.unlinkSync(audioPath);
+ }
+ await sock.sendMessage(m.chat, { react: { text: "✅", key: m.key } });
+ } else {
+ throw new Error('Alternative API failed');
+ }
+ } catch (altError) {
+ if (fs.existsSync(audioPath)) {
+ fs.unlinkSync(audioPath);
+ }
+ newReply('Gagal mengunduh audio. Coba lagi nanti.');
+ await sock.sendMessage(m.chat, { react: { text: "❌", key: m.key } });
+ }
+ }
+ } catch (error) {
+ newReply('Terjadi kesalahan saat mencari atau memproses lagu.');
+ await sock.sendMessage(m.chat, { react: { text: "❌", key: m.key } });
+ }
+ break
 			case 'tiktokslide':
 			case 'ttslide':
 			case 'tiktokfoto':
@@ -8226,7 +8385,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!text) return newReply(`⚠️ Hmm... Kamu belum kasih link nih! 🫣 Coba ketik kayak gini ya: *${prefix + command} <url>*`);
 				try {
-					await m.react('⏱️');
+					await m.react('🐤');
 					let anu = await tiktokDownloaderVideo(text);
 					let item = 0;
 					for (let imgs of anu.data) {
@@ -8278,7 +8437,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!text) return newReply(`⚠️ Hmm... Kamu belum kasih link nih! 🫣 Coba ketik kayak gini ya: *${prefix + command} <url>*`);
 				try {
-					await m.react('⏱️');
+					await m.react('🐤');
 					let anu = await tiktokDownloaderVideo(text);
 					let audio = anu.music_info.url;
 					await sock.sendMessage(
@@ -8315,7 +8474,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply("Yah kak, limitnya udah habis nih 😢. Yuk upgrade ke premium biar bisa terus pakai fitur ini! ✨");
 				if (!text) return newReply(`⚠️ Eits, Kamu lupa kasih kata kunci! 😅\nCoba ketik kayak gini ya: *${prefix + command} <query>*`);
 				try {
-					await m.react('⏱️');
+					await m.react('🐤');
 					let search = await tiktokSearchVideo(text);
 					let teks = `🎥 *${search.videos[0].title}*\n\n`;
 					teks += `🆔 *Video ID*: ${search.videos[0].video_id}\n`;
@@ -8405,7 +8564,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 					return newReply(`⚠️ URL yang diberikan bukan URL Alight Motion!`);
 				}
 				try {
-					await m.react('⏱️');
+					await m.react('🐤');
 					const result = await alightScrape(text);
 					if (result.error) {
 						return newReply(result.error);
@@ -8643,7 +8802,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!text) return newReply(`⚠️ Uh-oh, Kamu lupa kasih kata kunci nih! 🫣 Coba ketik kayak gini ya: *${prefix + command} WhatsApp* biar Mora bisa bantu cari aplikasinya! 📲✨`);
 				try {
-					await m.react('⏱️');
+					await m.react('🐤');
 					let hasil = await PlayStore(text);
 					if (!hasil || hasil.length === 0 || hasil.message) {
 						return newReply('❌ Tidak ditemukan hasil untuk pencarian tersebut, coba kata kunci lain ya kak!');
@@ -8765,6 +8924,25 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				await sock.sendMessage(m.chat, { text: petInfo }, { quoted: m });
 			db.data.users[m.sender].limit -= 1;
 			break;
+			
+			case 'ambilsw': case "sw": {
+    if (m.isGroup) return newReply("❌ Command ini hanya bisa digunakan di chat pribadi!");
+
+    const quotedMessage = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+    if (!quotedMessage) return newReply("📌 Balas pesan gambar/video yang ingin diambil!");
+
+    if (quotedMessage.imageMessage) {
+        let imageUrl = await sock.downloadAndSaveMediaMessage(quotedMessage.imageMessage);
+        return sock.sendMessage(m.chat, { image: { url: imageUrl } }, { quoted: m });
+    }
+
+    if (quotedMessage.videoMessage) {
+        let videoUrl = await sock.downloadAndSaveMediaMessage(quotedMessage.videoMessage);
+        return sock.sendMessage(m.chat, { video: { url: videoUrl } }, { quoted: m });
+    }
+    return newReply("❌ Hanya bisa mengambil gambar atau video dari pesan yang dikutip!");
+}
+break
 				
 			case 'mlstalk': {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
@@ -8846,103 +9024,72 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			}
 			db.data.users[m.sender].limit -= 1;
 			break;
-
-			case 'pinterest': case 'pin': {
+			
+			case "texttoimage": case "flux": case "fluximg": case "createimage": case "bikingambar": case "timg": {
+  if (!text) {
+    return newReply('Masukkan teks yang ingin dijadikan gambar!');
+  }
+  try {
+    newReply('_proses cuyy..._');
+    let apiUrl = `https://api.rynn-archive.biz.id/ai/flux-schnell?text=${encodeURIComponent(text)}`;
+    let response = await fetch(apiUrl);
+    let buffer = await response.buffer();
+    await sock.sendMessage(m.chat, { image: buffer, caption: '*Ini hasil gambarnya kak :v*\n\n> Maaf jika tidak sesuai harapan 😔' }, { quoted: m });
+  } catch (error) {
+    console.error('Error in flux:', error);
+    newReply('Terjadi kesalahan saat memproses gambar');
+  }
+}
+break
+			
+			case 'pinterest': 
+			case 'pin': {
+			await m.react('🧏');
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
-				if (!text) return newReply(`Enter Query!`);
-				await m.react('⏱️');
-				async function createImage(url) {
-					const { imageMessage } = await generateWAMessageContent({
-						image: {
-							url
-						}
-					}, {
-						upload: sock.waUploadToServer
-					});
-					return imageMessage;
+				if (!text) return newReply(`kirim naon anu rek di cari na😒`); // Cek apakah query sudah diberikan
+
+				anutrest = await pinterest(text); // Dapatkan hasil pencarian dari Pinterest
+				let selectedImages = anutrest.slice(0, 5); // Ambil 5 gambar pertama dari hasil pencarian
+
+				// Kirim gambar satu per satu dengan caption
+				let messages = selectedImages.map(url => ({
+					image: { url },
+					caption: '⭔ Media Url: ' + url
+				}));
+
+				// Kirim gambar-gambar ke chat
+				for (let message of messages) {
+					await sock.sendMessage(m.chat, message, { quoted: m });
 				}
-				function shuffleArray(array) {
-					for (let i = array.length - 1; i > 0; i--) {
-						const j = Math.floor(Math.random() * (i + 1));
-						[array[i], array[j]] = [array[j], array[i]];
-					}
-				}
-				let push = [];
-				let anutrest = await pinterest(text);
-				shuffleArray(anutrest);
-				let selectedImages = anutrest.slice(0, 5);
-				let i = 1;
-				for (let message of selectedImages) {
-					push.push({
-						body: proto.Message.InteractiveMessage.Body.fromObject({
-							text: `👤 *Diunggah oleh*: ${message.upload_by}\n` +
-							`📛 *Nama Lengkap*: ${message.fullname}\n` +
-							`👥 *Pengikut*: ${message.followers}\n` +
-							`📝 *Caption*: ${message.caption}`
-						}),
-						footer: proto.Message.InteractiveMessage.Footer.fromObject({
-							text: footer
-						}),
-						header: proto.Message.InteractiveMessage.Header.fromObject({
-							title: `*Gambar* - ${i++}`,
-							hasMediaAttachment: true,
-							imageMessage: await createImage(message.image)
-						}),
-						nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.fromObject({
-							buttons: [
-								{
-									"name": "cta_url",
-									"buttonParamsJson": `{
-										"display_text": "View Source 👀",
-										"url": "${message.source}", 
-										"merchant_url": "${message.source}"
-									}`
-								}
-							]
-						})
-					});
-				}
-				const msg = generateWAMessageFromContent(m.chat, {
-					viewOnceMessage: {
-						message: {
-							messageContextInfo: {
-								deviceListMetadata: {},
-								deviceListMetadataVersion: 2
-							},
-							interactiveMessage: proto.Message.InteractiveMessage.fromObject({
-								body: proto.Message.InteractiveMessage.Body.create({
-									text: mess.done
-								}),
-								footer: proto.Message.InteractiveMessage.Footer.create({
-									text: footer
-								}),
-								header: proto.Message.InteractiveMessage.Header.create({
-									hasMediaAttachment: false
-								}),
-								carouselMessage: proto.Message.InteractiveMessage.CarouselMessage.fromObject({
-									cards: [
-										...push
-									]
-								})
-							})
-						}
-					}
-				}, { 
-					quoted: m 
-				});
-				await sock.relayMessage(m.chat, msg.message, {
-					messageId: msg.key.id
-				});
+
+				newReply(' tah nges 5 poto nges di kirim🤪');
 			}
 			db.data.users[m.sender].limit -= 1;
 			break
+			
+			//case videy no scrap no Module
+
+case 'videy': {
+if (!isPremium && db.data.users[m.sender].limit < 1)return newReply(mess.premium) //buat fitur premium mu sendiri
+if (!args[0]) return newReply(`FORMAT SALAH!\nEx: ${prefix+command} https://videy.co/v?id=bH6hO3F5`)
+newReply(mess.wait)
+const urlObj = new URL(args[0]);
+const videoId = urlObj.searchParams.get("id");
+const link = `https://cdn.videy.co/${videoId}.mp4` 
+sock.sendMessage(m.chat, { 
+video: {url:link},
+caption: mess.done
+}, {quoted:m})
+db.data.users[m.sender].limit -= 1
+}
+break
 
 			case 'savepin': {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!text) return newReply(`Example: ${prefix + command} https://pin.it/34Gef3SlC`)
 				if (!text.includes('pin')) return newReply(`Link Invalid!!`)
 				try {
-					await m.react('⏱️');
+					await m.react('🐤');
 					const res = await savePin(text);
 					const { title, results } = res
 					let media = results[0]
@@ -9022,7 +9169,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			case 'neko': {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!isPremium) return newReply(mess.premium);
-				await m.react('⏱️');
+				await m.react('🐤');
 				const data = await fetchJson(`https://api.waifu.pics/sfw/${command}`);
 				m.reply({
 					image: { url: data.url },
@@ -9052,7 +9199,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			case 'randombluearchive': {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!isPremium) return newReply(mess.premium);
-				await m.react('⏱️');
+				await m.react('🐤');
 				const data = await fetchJson(`https://api.siputzx.my.id/api/r/blue-archive`);
 				m.reply({
 					image: { url: data.url },
@@ -9081,7 +9228,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			case 'hwaifu': {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!isPremium) return newReply(mess.premium);
-				await m.react('⏱️');
+				await m.react('🐤');
 				const data = await fetchJson(`https://api.waifu.pics/nsfw/waifu`);
 				m.reply({
 					image: { url: data.url },
@@ -9106,7 +9253,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			case 'hneko': {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!isPremium) return newReply(mess.premium);
-				await m.react('⏱️');
+				await m.react('🐤');
 				const data = await fetchJson(`https://api.waifu.pics/nsfw/neko`);
 				m.reply({
 					image: { url: data.url },
@@ -9131,7 +9278,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			case 'trap': {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!isPremium) return newReply(mess.premium);
-				await m.react('⏱️');
+				await m.react('🐤');
 				const data = await fetchJson(`https://api.waifu.pics/nsfw/${command}`);
 				m.reply({
 					image: { url: data.url },
@@ -9156,7 +9303,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			case 'blowjob': {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!isPremium) return newReply(mess.premium);
-				await m.react('⏱️');
+				await m.react('🐤');
 				const data = await fetchJson(`https://api.waifu.pics/nsfw/${command}`);
 				m.reply({
 					image: { url: data.url },
@@ -9182,7 +9329,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			case 'hentai-video': {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!isPremium) return newReply(mess.premium);
-				await m.react('⏱️');
+				await m.react('🐤');
 				const result = await hentai();
 				m.reply({
 					video: { url: result[0].video_1 },
@@ -9969,14 +10116,14 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				break;
 			}
 
-			case 'bisa': {
+			    case 'bisa': {
 				if (!text) return newReply(`Tanyakan sesuatu dong~\n\nContoh: ${prefix + command} aku belajar coding?`)
 				let jawaban = [`Bisa banget!`, `Hmm, kayaknya enggak bisa deh.`, `Nggak mungkin, maaf ya.`, `Tentu saja Kamu bisa!!! Ayo semangat!`]
 				let hasil = jawaban[Math.floor(Math.random() * jawaban.length)]
 				let respon = `*Bisa ${text}*\nJawabanku: ${hasil}`
 				await newReply(respon)
 			}
-			break
+			break;
 
 			case 'apakah': {
 				if (!text) return newReply(`Yuk tanyakan sesuatu!\n\nContoh: ${prefix + command} dia jodohku?`)
@@ -10116,7 +10263,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 					'🤐 Ada gak hal yang Kamu sembunyikan dari orang yang sangat dekat denganmu?',
 					'💔 Apa yang pernah membuatmu patah hati?',
 					'🌑 Apa hal yang Kamu sangat takuti tetapi tidak ingin orang lain tahu?',
-					'🔒 Apa yang Kamu sembunyikan dari keluarga Kamu?',
+					'∅ Apa yang Kamu sembunyikan dari keluarga Kamu?',
 					'💭 Apakah ada keputusan besar yang Kamu ambil dengan menyesal?',
 					'🛑 Apa kebiasaan buruk yang sulit Kamu tinggalkan?',
 					'🤯 Apakah ada sesuatu yang Kamu ingin katakan pada seseorang, tetapi Kamu selalu takut untuk mengatakannya?',
@@ -11556,45 +11703,32 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			case 'cmd':
 			case 'menu': {
 				try {
-					await m.react('⏱️');
+					await m.react('🐤');
 					let userData = db.data.users[m.sender];
-					let simplemenu = `HAI BRO *${pushname}* 👋\nLagi butuh bantuan? Aku siap sedia nih! 😆✨\n\n`;
+					let simplemenu = `HAI *${pushname}* 👋\n𝑰𝑴 𝑨𝑫𝑨𝑳𝑨𝑯 𝑨𝑺𝑰𝑺𝑻𝑬𝑵 𝑴𝑼\n\n`;
 					simplemenu += `💰 *Saldo*: ${formatAngka(userData.uang || '0')}\n`;
 					simplemenu += `💳 *Limit*: ${userData.limit || 'Belum ada'}\n`;
 					simplemenu += `🌟 *Status*: ${userData.premium ? 'Premium 🔥' : 'Gratisan 😜'}\n`;
-					simplemenu += `🎓 *Gelar*: ${userData.title || 'Belum ada'}\n\n`;
-					simplemenu += `Pilih menu di bawah buat eksplor fitur keren yang aku punya! 🔥👇`;
+				simplemenu += `🎓 *Gelar*: ${userData.title || 'Belum ada'}\n\n`;
+					simplemenu += `𝚖𝚊𝚗𝚐𝚐𝚊 𝚏𝚒𝚕𝚒𝚑 𝚖𝚎𝚗𝚞 𝚜𝚝𝚊𝚛𝚝 𝚍𝚒 𝚋𝚊𝚠𝚊𝚑 𝙼𝚢 𝚠𝚎𝚋 𝚙𝚊𝚐𝚎 https://xzosy.github.io/`;
 
-					let samplemenu = `HAI BRO *${pushname}*!! 👋\nLagi butuh bantuan? AKU siap sedia nih! 😆✨\n\n`;
-					samplemenu += `💰 *Saldo*: ${formatAngka(userData.uang || '0')}\n`;
-					samplemenu += `💳 *Limit*: ${userData.limit || 'Belum ada'}\n`;
-					samplemenu += `🌟 *Status*: ${userData.premium ? 'Premium 🔥' : 'Gratisan 😜'}\n`;
-					samplemenu += `🎓 *Gelar*: ${userData.title || 'Belum ada'}\n\n`;
-					samplemenu += `Pilih menu di bawah buat eksplor fitur keren yang aku punya! 🔥👇\n\n`;
+					let samplemenu = `𝑯𝑨𝑰 *${pushname}*!! 🖕\n𝑰𝑴 𝑨𝑫𝑨𝑳𝑨𝑯 𝑨𝑺𝑰𝑺𝑻𝑬𝑵 𝑴𝑼\n\n`;
+					samplemenu += `⌤ *𝑺𝑨𝑳𝑫𝑶*: ${formatAngka(userData.uang || '0')}\n`;
+					samplemenu += `⊜ *𝑳𝑰𝑴𝑰𝑻*: ${userData.limit || 'Belum ada'}\n`;
+					samplemenu += `ღ *𝑺𝑻𝑨𝑻𝑼𝑺*: ${userData.premium ? '𝑷𝑹𝑬𝑴𝑰𝑼𝑴' : '𝑮𝑹𝑨𝑻𝑰𝑺𝑨𝑵'}\n`;
+					samplemenu += `♕ *𝑮𝑬𝑳𝑨𝑹*: ${userData.title || '𝑲𝑶𝑺𝑶𝑵𝑮'}\n\n`;
+					samplemenu += `𝚖𝚊𝚗𝚐𝚐𝚊 𝚏𝚒𝚕𝚒𝚑 𝚖𝚎𝚗𝚞 𝚜𝚝𝚊𝚛𝚝 𝚍𝚒 𝚋𝚊𝚠𝚊𝚑 𝙼𝚢 𝚠𝚎𝚋 𝚙𝚊𝚐𝚎 https://xzosy.github.io/\n\n`;
 
-					samplemenu += `╭─ׁ ࣪ ִֶָ☾. 📌 *MAIN MENU* ໒ ֵ ׄ\n`;
-					samplemenu += `┃ お ─· ${prefix}allmenu\n`;
-					samplemenu += `┃ お ─· ${prefix}ownermenu\n`;
-					samplemenu += `┃ お ─· ${prefix}groupmenu\n`;
-					samplemenu += `┃ お ─· ${prefix}searchmenu\n`;
-					samplemenu += `┃ お ─· ${prefix}downloadmenu\n`;
-					samplemenu += `┃ お ─· ${prefix}convertmenu\n`;
-					samplemenu += `┃ お ─· ${prefix}gamemenu\n`;
-					samplemenu += `┃ お ─· ${prefix}funmenu\n`;
-					samplemenu += `╰──────────── •\n\n`;
-
-					samplemenu += `╭─ׁ ࣪ ִֶָ☾. 🌟 *ADDITIONAL MENU* ໒ ֵ ׄ\n`;
-					samplemenu += `┃ お ─· ${prefix}randomanimemenu\n`;
-					samplemenu += `┃ お ─· ${prefix}bugmenu\n`;
-					samplemenu += `┃ お ─· ${prefix}rpgmenu\n`;
-					samplemenu += `┃ お ─· ${prefix}othermenu\n`;
-					samplemenu += `╰──────────── •\n\n`;
-
-					samplemenu += `╭─ׁ ࣪ ִֶָ☾. 🔒 *SPECIAL MENU* ໒ ֵ ׄ\n`;
-					samplemenu += `┃ お ─· ${prefix}privacymenu\n`;
-					samplemenu += `┃ お ─· ${prefix}newslettermenu\n`;
-					samplemenu += `┃ お ─· ${prefix}aimenu\n`;
-					samplemenu += `╰──────────── •\n`;
+					samplemenu += `⋪⎯≼ׁ ࣪ ִֶָ彡 *𝑺𝑻𝑨𝑹𝑻 𝑴𝑬𝑵𝑼* ໒ ֵ ׄ\n`;
+					samplemenu += `⋋ ♢ ─· ${prefix}𝚊𝚕𝚕𝚖𝚎𝚗𝚞\n`;
+					samplemenu += `⋋ ♢ ─· ${prefix}𝚘𝚠𝚗𝚎𝚛𝚖𝚎𝚗𝚞\n`;
+					samplemenu += `⋋ ♢ ─· ${prefix}𝚐𝚛𝚘𝚞𝚙𝚖𝚎𝚗𝚞\n`;
+					samplemenu += `⋋ ♢ ─· ${prefix}𝚜𝚎𝚊𝚛𝚌𝚑𝚖𝚎𝚗𝚞\n`;
+					samplemenu += `⋋ ♢ ─· ${prefix}𝚍𝚘𝚠𝚗𝚕𝚘𝚊𝚍𝚖𝚎𝚗𝚞\n`;
+					samplemenu += `⋋ ♢ ─· ${prefix}𝚌𝚘𝚗𝚟𝚎𝚛𝚝𝚖𝚎𝚗𝚞\n`;
+					samplemenu += `⋋ ♢ ─· ${prefix}𝚐𝚊𝚖𝚎𝚖𝚎𝚗𝚞\n`;
+					samplemenu += `⋋ ♢ ─· ${prefix}𝚏𝚞𝚗𝚖𝚎𝚗𝚞\n`;
+					samplemenu += `⊰⊶⊶⊶⊶⊶⊶⊶⊶⊶⊶⊶⊶⋙\n\n`;
 
 					const button = [{
 						"name": "single_select",
@@ -11624,9 +11758,9 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 									]
 								},
 								{
-									"title": "🔒 Menu Khusus",
+									"title": "∅ Menu Khusus",
 									"rows": [
-										{ "header": "🔒 Privasi", "title": "Atur privasi bot sesuai kebutuhan", "id": `${prefix}privacymenu` },
+										{ "header": "∅ Privasi", "title": "Atur privasi bot sesuai kebutuhan", "id": `${prefix}privacymenu` },
 										{ "header": "📰 Newsletter", "title": "Dapatkan info terbaru dari bot!", "id": `${prefix}newslettermenu` },
 										{ "header": "🤖 AI Features", "title": "Cobain fitur kecerdasan buatan!", "id": `${prefix}aimenu` }
 									]
@@ -11796,8 +11930,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${allMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${allMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -11860,8 +11994,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${ownerMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${ownerMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -11924,8 +12058,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${groupMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${groupMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -11987,8 +12121,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${searchMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${searchMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12050,8 +12184,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${downloadMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${downloadMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12113,8 +12247,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${convertMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${convertMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12176,8 +12310,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${storeMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${storeMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12239,8 +12373,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${panelMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${panelMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12302,8 +12436,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${gameMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${gameMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12365,8 +12499,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${funMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${funMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12428,8 +12562,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${randomAnimeMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${randomAnimeMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12491,8 +12625,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${bugMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${bugMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12554,8 +12688,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${rpgMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${rpgMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12617,8 +12751,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${privacyMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${privacyMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12680,8 +12814,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${newsletterMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${newsletterMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12743,8 +12877,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${aiMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${aiMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -12808,8 +12942,8 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				let latensie = speed() - timestampe;
 				let a = db.data.users[m.sender];
 				let me = m.sender;
-				await m.react('⏱️');
-				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹\n\n${readmore}🌟 *𝐁𝐎𝐓 𝐈𝐍𝐅𝐎*\n⨳ *Speed*: ${latensie.toFixed(4)} ms\n⨳ *Runtime*: ${runtime(process.uptime())}\n⨳ *Bot*: ${botName}\n⨳ *Owner*: +${ownerNumber}\n⨳ *Mode*: ${sock.public ? 'Public' : 'Self'}\n⨳ *Platform*: ${os.platform()}\n⨳ *Total User*: ${Object.keys(db.data.users).length}\n⨳ *Total Chat*: ${Object.keys(global.db.data.chats).length}\n\n🧍 *𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${otherMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
+				await m.react('🐤');
+				let simplemenu = `┌──❖ Halo, Kak ${pushname}! 👋✨\n│ ✧ ${ucapanWaktu} yaa! 😊\n└────────────⳹*𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎*\n⨳ *Nama*: ${pushname}\n⨳ *Number*: +${me.split('@')[0]}\n⨳ *Limit*: ${a.limit}\n⨳ *Status*: ${isVip ? 'VIP User' : isPremium ? 'Premium User' : 'Free User'}\n⨳ *Serial*: ${a.serialNumber}\n\n🕒 *𝐓𝐈𝐌𝐄 𝐈𝐍𝐅𝐎*\n⨳ *Time*: ${time}\n⨳ *Date*: ${date}\n\n${readmore}${otherMenu(prefix)}\n\n✨ *Semoga harimu menyenangkan, Kak!* 🥰`;
 
 				const buttons = [
 					{ buttonId: `${prefix}owner`, buttonText: { displayText: 'Owner 👤' } },
@@ -13030,7 +13164,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (nomorNya.startsWith('0') || isNaN(nomorNya)) {
 					return newReply(`Nomornya gak valid, Kak! Gunakan format internasional tanpa awalan '0' ya! 🙏`);
 				}
-				await m.react('⏱️');
+				await m.react('🐤');
 				let pesanTemplate = `\nHai Kak, ada menfess nih 😊✨\n\n👤 *Dari*: ${namaNya}\n✉️ *Pesan*: ${pesanNya}\n\n_Pesan ini cuma disampaikan oleh bot ya, Kak! 🤖_`;
 				let id = m.sender;
 				this.menfes[id] = {
@@ -13214,7 +13348,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 							responseText += `📝 *Username*: ${user.attributes.username}\n`;
 							responseText += `📧 *Email*: ${user.attributes.email.toLowerCase()}\n`;
 							responseText += `🛡️ *Admin*: ${user.attributes.root_admin ? 'Ya' : 'Tidak'}\n`;
-							responseText += `🔒 *2FA*: ${user.attributes["2fa"] ? 'Aktif' : 'Nonaktif'}\n\n`;
+							responseText += `∅ *2FA*: ${user.attributes["2fa"] ? 'Aktif' : 'Nonaktif'}\n\n`;
 						}
 
 						responseText += `📑 *Halaman*: ${data.meta.pagination.current_page}/${data.meta.pagination.total_pages}\n`;
@@ -15080,7 +15214,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			if (budy.startsWith('=>')) {
 				if (!isCreator) return m.react('⚠️');
 				if (isBot) return m.react('⚠️');
-				await m.react('⏱️');
+				await m.react('🐤');
 				function Return(sul) {
 					sat = JSON.stringify(sul, null, 2)
 					bang = util.format(sat)
@@ -15101,7 +15235,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 				if (!isCreator) return m.react('⚠️');
 				if (isBot) return m.react('⚠️');
 				try {
-					await m.react('⏱️');
+					await m.react('🐤');
 					let evaled = await eval(budy.slice(2))
 					if (typeof evaled !== 'string') evaled = require('util').inspect(evaled)
 					m.react('✅');
@@ -15114,7 +15248,7 @@ module.exports = sock = async (sock, m, msg, chatUpdate, store) => {
 			if (budy.startsWith('$')) {
 				if (!isCreator) return m.react('⚠️');
 				if (isBot) return m.react('⚠️');
-				await m.react('⏱️');
+				await m.react('🐤');
 				exec(budy.slice(2), (err, stdout) => {
 					m.react('✅');
 					if (err) return newReply(err)
