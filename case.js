@@ -6943,7 +6943,7 @@ break
 				enhance[m.sender] = true;
 				await m.react('🐤');
 				try {
-					const buffer = await getBuffer(`https://brat.caliphdev.com/api/brat?text=${encodeURIComponent(text)}`);
+					const buffer = await getBuffer(`https://api.hiuraa.my.id/maker/brat?text=${encodeURIComponent(text)}`);
 					await m.react('✅');
 					sock.sendImageAsSticker(m.chat, buffer, m, { packname: botName, author: ownerName });
 				} catch (err) {
@@ -6969,7 +6969,7 @@ break
 				try {
 					for (let i = 0; i < words.length; i++) {
 						const currentText = words.slice(0, i + 1).join(" ");
-						const res = await axios.get(`https://brat.caliphdev.com/api/brat?text=${encodeURIComponent(currentText)}`, { responseType: "arraybuffer" }).catch((e) => e.response);
+						const res = await axios.get(`https://api.hiuraa.my.id/maker/brat?text=${encodeURIComponent(currentText)}`, { responseType: "arraybuffer" }).catch((e) => e.response);
 						const framePath = path.join(tempDir, `frame${i}.mp4`);
 						fs.writeFileSync(framePath, res.data);
 						framePaths.push(framePath);
