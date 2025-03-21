@@ -38,7 +38,6 @@ const similarity = require('similarity');
 const toMS = require('ms');
 const translate = require('translate-google-api');
 const util = require('util');
-const { getVideoInfo, downloadVideo, downloadAudio } =require("hybrid-ytdl");
 const yts = require('yt-search');
 const readmore = String.fromCharCode(8206).repeat(4001);
 
